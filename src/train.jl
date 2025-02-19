@@ -1,4 +1,6 @@
-using Flux: onehotbatch, crossentropy, params, ADAM, DataLoader
+using Flux: onehotbatch, crossentropy, trainable, onecold, ADAM, DataLoader
+using Flux
+using OneHotArrays
 using BSON
 using ProgressBars
 using CUDA
@@ -75,16 +77,19 @@ function train_model(config::Config)
                 x = x .* (0.8f0 .+ 0.4f0 .* rand(Float32, 1, 1, 1, size(x, 4)))
                 x = circshift(x, (0, rand(-5:5), 0, 0))
                 
-                grads = gradient(params(model)) do
-                    ŷ = model(x)
+                # Use explicit gradient computation
+                loss = 0.0f0
+                gs = gradient(model) do m
+                    ŷ = m(x)
                     loss = crossentropy(ŷ, y)
                     epoch_loss += loss
-                    correct += sum(onecold(ŷ) .== onecold(y))
+                    correct += sum(Flux.onecold(ŷ) .== Flux.onecold(y))
                     total += size(y, 2)
-                    return loss
+                    loss
                 end
                 
-                Flux.update!(opt, params(model), grads)
+                # Update parameters
+                Flux.update!(opt, trainable(model), gs)
                 
                 # Update progress bar
                 set_description(progress, "Epoch $epoch")
@@ -99,7 +104,7 @@ function train_model(config::Config)
                 x, y = x |> device, y |> device
                 ŷ = model(x)
                 val_loss += crossentropy(ŷ, y)
-                val_correct += sum(onecold(ŷ) .== onecold(y))
+                val_correct += sum(Flux.onecold(ŷ) .== Flux.onecold(y))
                 val_total += size(y, 2)
             end
             

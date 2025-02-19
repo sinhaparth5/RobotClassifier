@@ -1,6 +1,6 @@
 module RobotClassifier
 
-using Flux, Images, FileIO, BSON, Plots, Luxor, MLDataUtils, Cairo, Colors, ImageMagick, ImageIO
+using Flux, OneHotArrays, Images, FileIO, BSON, Plots, Luxor, MLDataUtils, Cairo, Colors, ImageMagick, ImageIO, CUDA
 using .Threads: @threads
 #using CUDA  # Remove if not using GPU
 
