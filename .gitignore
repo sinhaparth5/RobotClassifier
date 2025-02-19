@@ -1,2 +1,4 @@
 data/
+test_samples/
+models/
 Manifest.toml
